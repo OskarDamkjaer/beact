@@ -21,6 +21,7 @@ function createTextNode(text) {
 }
 
 let nextUnitOfWork = null;
+let wipRoot = null;
 
 function workLoop(deadline) {
     let shouldYield = false;
@@ -29,16 +30,34 @@ function workLoop(deadline) {
         shouldYield = deadline.timeRemaining() < 1;
     }
 
+    if (!nextUnitOfWork && wipRoot) {
+        commitRoot();
+    }
+
     requestIdleCallback(workLoop);
+}
+
+function commitRoot() {
+    commitWork(wipRoot.child);
+    wipRoot = null;
+}
+
+function commitWork(fiber) {
+    if (!fiber) {
+        return;
+    }
+
+    console.dir(fiber);
+    // TODO something is funky here, debug
+    const domParent = fiber.parent.dom;
+    domParent.appendChild(fiber.dom);
+    commitWork(fiber.child);
+    commitWork(fiber.sibling);
 }
 
 function performUnitOfWork(fiber) {
     if (!fiber.dom) {
         fiber.dom = createDom(nextUnitOfWork);
-    }
-
-    if (fiber.parent) {
-        fiber.parent.dom.appendChild(fiber.dom);
     }
     // create new fibers
     const elements = fiber.props.children;
@@ -84,7 +103,8 @@ function createDom(fiber) {
 }
 
 function render(element, container) {
-    nextUnitOfWork = { dom: container, props: { children: [element] } };
+    wipRoot = { dom: container, props: { children: [element] } };
+    nextUnitOfWork = wipRoot;
 }
 
 const Tidact = { createElement, render };
