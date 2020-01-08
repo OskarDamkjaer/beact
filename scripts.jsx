@@ -6,6 +6,5 @@ const element = (
     <a> bar </a> <b />
   </div>
 );
-console.log(element);
 
-//rootNode.appendChild();
+Tidact.render(element, rootNode);

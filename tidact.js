@@ -20,4 +20,15 @@ function createTextNode(text) {
     };
 }
 
-const Tidact = { createElement };
+function render(element, container) {
+    const node = element.type === "TEXT_ELEMENT" ? document.createTextNode("") : document.createElement(element.type)
+
+    const isProp = k => k !== "children"
+    Object.keys(element.props).filter(isProp).forEach(name => { node[name] = element.props[name] })
+
+    element.props.children.forEach(c => render(c, node))
+
+    container.appendChild(node)
+}
+
+const Tidact = { createElement, render };
