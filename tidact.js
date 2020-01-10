@@ -20,7 +20,7 @@ function createElement(type, props, ...children) {
     };
 }
 
-function reconcileChildren(parentFiber) {
+function reconcileChildren(parentFiber, children) {
     function traverse(oldFiber, correspondingIndex) {
         let newFiber = null;
         const newElement = childrenToRenderArr[correspondingIndex];
@@ -38,9 +38,7 @@ function reconcileChildren(parentFiber) {
                 oldFiber,
                 effectTag: "UPDATE"
             };
-            // update
         } else if (oldFiber) {
-            // remove old fiver
             oldFiber.effectTag = "DELETE";
             toDelete.push(oldFiber);
         } else if (newElement) {
@@ -52,7 +50,6 @@ function reconcileChildren(parentFiber) {
                 oldFiber: null,
                 effectTag: "APPEND"
             };
-            // add this node
         }
 
         if (correspondingIndex === 0) {
@@ -73,7 +70,7 @@ function reconcileChildren(parentFiber) {
 
     const childrenLastRenderedLL =
         parentFiber.oldFiber && parentFiber.oldFiber.child; // oldFiber is null on first render
-    const childrenToRenderArr = parentFiber.props.children;
+    const childrenToRenderArr = children;
     let prevSibling = null;
 
     traverse(childrenLastRenderedLL, 0);
@@ -87,6 +84,33 @@ function isProp(key) {
 }
 
 function performUnitOfWork(fiber) {
+    const isFunctionComponent = fiber.type instanceof Function;
+    isFunctionComponent
+        ?
+        updateFunctionComponent(fiber) :
+        updateSimpleComponent(fiber);
+
+    // return next unit of work
+    if (fiber.child) {
+        return fiber.child;
+    }
+
+    let nextFiber = fiber;
+    while (nextFiber) {
+        if (nextFiber.sibling) {
+            return nextFiber.sibling;
+        }
+        nextFiber = nextFiber.parent;
+    }
+}
+
+function updateFunctionComponent(fiber) {
+    const children = [fiber.type(fiber.props)];
+
+    reconcileChildren(fiber, children);
+}
+
+function updateSimpleComponent(fiber) {
     function createDom(fiber) {
         const dom =
             fiber.type === "TEXT_ELEMENT" ?
@@ -105,21 +129,10 @@ function performUnitOfWork(fiber) {
     if (!fiber.dom) {
         fiber.dom = createDom(fiber);
     }
+
     // create new fibers
-    reconcileChildren(fiber);
-
-    // return next unit of work
-    if (fiber.child) {
-        return fiber.child;
-    }
-
-    let nextFiber = fiber;
-    while (nextFiber) {
-        if (nextFiber.sibling) {
-            return nextFiber.sibling;
-        }
-        nextFiber = nextFiber.parent;
-    }
+    const children = fiber.props.children;
+    reconcileChildren(fiber, children);
 }
 
 let nextUnitOfWork = null;
@@ -147,13 +160,27 @@ function commitRoot() {
             return;
         }
 
-        const domParent = fiber.parent.dom;
+        // functional components don't have domParents, we need to traverse
+        function findNearestDomParent(fiber) {
+            return fiber.parent.dom ?
+                fiber.parent.dom :
+                findNearestDomParent(fiber.parent);
+        }
+        const domParent = findNearestDomParent(fiber);
+
         if (fiber.effectTag === "APPEND" && fiber.dom != null) {
             domParent.appendChild(fiber.dom);
         } else if (fiber.effectTag === "UPDATE" && fiber.dom != null) {
             updateDom(fiber.dom, fiber.oldFiber.props, fiber.props);
         } else if (fiber.effectTag === "DELETE") {
-            domParent.removeChild(fiber.dom);
+            function commitDeletion(fiber, domParent) {
+                if (fiber.dom) {
+                    domParent.removeChild(fiber.dom);
+                } else {
+                    commitDeletion(fiber.child, domParent);
+                }
+            }
+            commitDeletion(fiber, domParent);
         }
 
         commitWork(fiber.child);
