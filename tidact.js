@@ -22,6 +22,9 @@ function createElement(type, props, ...children) {
 
 function reconcileChildren(parentFiber, children) {
     function traverse(oldFiber, correspondingIndex) {
+        if (!(correspondingIndex < childrenToRenderArr.length || oldFiber)) {
+            return;
+        }
         let newFiber = null;
         const newElement = childrenToRenderArr[correspondingIndex];
 
@@ -59,10 +62,10 @@ function reconcileChildren(parentFiber, children) {
         }
         prevSibling = newFiber;
 
+        const nextIndex = correspondingIndex + 1;
         const nextOldFiber = oldFiber && oldFiber.sibling;
-        if (correspondingIndex < childrenToRenderArr.length || nextOldFiber) {
-            traverse(nextOldFiber, correspondingIndex + 1);
-        }
+
+        traverse(nextOldFiber, nextIndex);
     }
 
     const childrenLastRenderedLL =
