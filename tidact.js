@@ -60,10 +60,7 @@ function reconcileChildren(parentFiber, children) {
         prevSibling = newFiber;
 
         const nextOldFiber = oldFiber && oldFiber.sibling;
-        if (
-            correspondingIndex < childrenToRenderArr.length ||
-            nextOldFiber != null
-        ) {
+        if (correspondingIndex < childrenToRenderArr.length || nextOldFiber) {
             traverse(nextOldFiber, correspondingIndex + 1);
         }
     }
@@ -104,10 +101,48 @@ function performUnitOfWork(fiber) {
     }
 }
 
+let wipFiber = null;
+let hookIndex = null;
+
 function updateFunctionComponent(fiber) {
+    wipFiber = fiber;
+    hookIndex = 0;
+    wipFiber.hooks = [];
     const children = [fiber.type(fiber.props)];
 
     reconcileChildren(fiber, children);
+}
+
+function useState(inital) {
+    const oldHook =
+        wipFiber.oldFiber &&
+        wipFiber.oldFiber.hooks &&
+        wipFiber.oldFiber.hooks[hookIndex];
+
+    const hook = { state: oldHook ? oldHook.state : inital, queue: [] };
+    wipFiber.hooks.push(hook);
+    hookIndex += 1;
+
+    const actions = oldHook ? oldHook.queue : [];
+    // TODO non function state hooks
+    actions.forEach(act => {
+        hook.state = act(hook.state);
+    });
+
+    const setState = action => {
+        // set state is just push an action and call for rerender
+        // *mind blown*
+        hook.queue.push(action);
+        wipRoot = {
+            dom: lastCommitedRoot.dom,
+            props: lastCommitedRoot.props,
+            oldFiber: lastCommitedRoot
+        };
+        nextUnitOfWork = wipRoot;
+        toDelete = [];
+    };
+
+    return [hook.state, setState];
 }
 
 function updateSimpleComponent(fiber) {
@@ -121,6 +156,13 @@ function updateSimpleComponent(fiber) {
             .filter(isProp)
             .forEach(name => {
                 dom[name] = fiber.props[name];
+            });
+
+        Object.keys(fiber.props)
+            .filter(isEventHandler)
+            .forEach(name => {
+                const eventType = name.toLowerCase().substring(2);
+                dom.addEventListener(eventType, fiber.props[name]);
             });
 
         return dom;
@@ -196,6 +238,7 @@ function commitRoot() {
 function updateDom(dom, oldProps, newProps) {
     const isNew = (prev, next) => key => prev[key] !== next[key];
     const isGone = (_prev, next) => key => !(key in next);
+    console.log(dom, oldProps, newProps);
 
     //Remove old or changed event listeners
     Object.keys(oldProps)
@@ -227,6 +270,7 @@ function updateDom(dom, oldProps, newProps) {
         .filter(isEventHandler)
         .filter(isNew(oldProps, newProps))
         .forEach(name => {
+            console.log("adding ", name);
             const eventType = name.toLowerCase().substring(2);
             dom.addEventListener(eventType, newProps[name]);
         });
@@ -244,4 +288,4 @@ function render(element, container) {
     toDelete = [];
 }
 
-const Tidact = { createElement, render };
+const Tidact = { createElement, render, useState };
