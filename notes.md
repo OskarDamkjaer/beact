@@ -35,3 +35,9 @@ x
 "That's the purpose of React Fiber. Fiber is reimplementation of the stack, specialized for React components. You can think of a single fiber as a virtual stack frame.""
 
 ## react as a UI-runtime och mer från overreacted
+
+## difference to svelte
+
+react approach -> rerender whole app in vdom, use alogrithm to see what changed, change only those things in real dom. Heuristics and so on make each step more efficient by skipping work.
+
+svelte -> in compilestep figure out templates dependance on data, then rerender templates that have a dependance on data changed, this way you know what has changed without simulating the change and diffing.
