@@ -58,7 +58,7 @@ function Board() {
         {renderSquare(7)}
         {renderSquare(8)}
       </div>
-      {gameOver && <button onClick={restart}>Try again?</button>}
+      {gameOver && <button onClick={restart}>Play again?</button>}
     </div>
   );
 }
