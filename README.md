@@ -4,4 +4,4 @@ Largely based of this fantastic resource https://pomb.us/build-your-own-react/
 
 ## Demo
 
-[See Beact in action here!](https://github.com/OskarDamkjaer/beact.git)
+[See Beact in action here!](https://oskardamkjaer.github.io/beact/)
