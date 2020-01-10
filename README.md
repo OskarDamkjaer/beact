@@ -4,4 +4,4 @@ Largely based of this fantastic resource https://pomb.us/build-your-own-react/
 
 ## Demo
 
-[See Beact in action here!](https://oskardamkjaer.github.io/beact/)
+[TicTacToe game from fbs official react tutorial](https://oskardamkjaer.github.io/beact/)
