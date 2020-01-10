@@ -292,4 +292,4 @@ function render(element, container) {
     toDelete = [];
 }
 
-const Tidact = { createElement, render, useState };
+const Beact = { createElement, render, useState };

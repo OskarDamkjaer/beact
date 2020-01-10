@@ -1,6 +1,6 @@
 const rootNode = document.getElementById("root");
 
-/** @jsx Tidact.createElement */
+/** @jsx Beact.createElement */
 function App(props) {
   return <h1>Hello {props.name}</h1>;
 }
@@ -23,4 +23,4 @@ function Counter() {
   );
 }
 
-Tidact.render(element, rootNode);
+Beact.render(element, rootNode);
