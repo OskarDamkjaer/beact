@@ -35,7 +35,7 @@ function reconcileChildren(parentFiber, children) {
         if (sameType) {
             newFiber = {
                 type: oldFiber.type,
-                props: newElement.props, // OMG
+                props: newElement.props,
                 dom: oldFiber.dom,
                 parent: parentFiber,
                 oldFiber,
@@ -78,7 +78,8 @@ function reconcileChildren(parentFiber, children) {
 
 function isEventHandler(key) {
     return key.startsWith("on");
-} // is this really the best way to handle it
+}
+
 function isProp(key) {
     return key !== "children" && !isEventHandler(key);
 }
@@ -90,7 +91,6 @@ function performUnitOfWork(fiber) {
         updateFunctionComponent(fiber) :
         updateSimpleComponent(fiber);
 
-    // return next unit of work
     if (fiber.child) {
         return fiber.child;
     }
@@ -127,9 +127,10 @@ function useState(inital) {
     hookIndex += 1;
 
     const actions = oldHook ? oldHook.queue : [];
-    // TODO non function state hooks
-    actions.forEach(act => {
-        hook.state = act(hook.state);
+
+    actions.forEach(action => {
+        const isFn = action instanceof Function;
+        hook.state = isFn ? action(hook.state) : action;
     });
 
     const setState = action => {
@@ -145,7 +146,6 @@ function useState(inital) {
         toDelete = [];
     };
 
-    // setstate creates a lot more rerenders than it should?
     return [hook.state, setState];
 }
 
