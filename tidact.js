@@ -35,7 +35,7 @@ function reconcileChildren(parentFiber, children) {
         if (sameType) {
             newFiber = {
                 type: oldFiber.type,
-                props: element.props,
+                props: newElement.props, // OMG
                 dom: oldFiber.dom,
                 parent: parentFiber,
                 oldFiber,
@@ -145,6 +145,7 @@ function useState(inital) {
         toDelete = [];
     };
 
+    // setstate creates a lot more rerenders than it should?
     return [hook.state, setState];
 }
 
@@ -254,7 +255,7 @@ function updateDom(dom, oldProps, newProps) {
 
     // Remove old properties
     Object.keys(oldProps)
-        .filter(isProperty)
+        .filter(isProp)
         .filter(isGone(oldProps, newProps))
         .forEach(name => {
             dom[name] = "";
@@ -262,7 +263,7 @@ function updateDom(dom, oldProps, newProps) {
 
     // Set new or changed properties
     Object.keys(newProps)
-        .filter(isProperty)
+        .filter(isProp)
         .filter(isNew(oldProps, newProps))
         .forEach(name => {
             dom[name] = newProps[name];

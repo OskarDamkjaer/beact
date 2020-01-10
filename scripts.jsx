@@ -26,11 +26,12 @@ const element = (
 function Counter() {
   const [count, setCount] = useState(0);
 
-  function inc() {
-    setCount(c => c + 1);
-  }
   /** @jsx Tidact.createElement */
-  return <button onClick={inc}>I've been clicked {count} times!</button>;
+  return (
+    <button onClick={() => setCount(c => c + 1)}>
+      I've been clicked {count} times!
+    </button>
+  );
 }
 
 Tidact.render(element, rootNode);
